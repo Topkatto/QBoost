@@ -2,113 +2,100 @@
 #include "Structs.hpp"
 #include <bits/stdc++.h>
 
-namespace qboost
-{
-    inline void CanvasMode(bool a)
-    {
-        QBoostConsole::Output(a ? QBoostANSI::DisableLineWrap : QBoostANSI::EnableLineWrap);
-        QBoostConsole::Output((a ? QBoostANSI::UseAltBuffer : QBoostANSI::UseMainBuffer));
+namespace qboost {
+
+inline void CanvasMode(bool a) {
+    QBoostConsole::Output(a ? QBoostANSI::DisableLineWrap : QBoostANSI::EnableLineWrap);
+    QBoostConsole::Output(a ? QBoostANSI::UseAltBuffer : QBoostANSI::UseMainBuffer);
+    QBoostConsole::ToggleANSI(a);
+}
+
+inline qboost::misc::rgb CanvasTransparent = {-67667, -67667, -67667};
+
+struct Canvas {
+private:
+    qboost::misc::rgb background_color;
+
+public:
+    long long width;
+    long long height;
+    std::vector<std::vector<qboost::misc::rgb>> colormap;
+
+    void drawPixel(long long x, long long y, qboost::misc::rgb color) {
+        if (y >= 0 && y < height && x >= 0 && x < width) {
+            colormap[y][x] = color;
+        }
     }
-    inline qboost::misc::rgb CanvasTransparent = {-67667,-67667,-67667};
-    struct Canvas
-    { 
-        private:
-        qboost::misc::rgb background_color;
-        public:
-        long long width;
-        long long height;
-        std::vector<std::vector<qboost::misc::rgb>> colormap;
-        void drawPixel(long long x, long long y, qboost::misc::rgb color)
-        {
-            if (y >= 0 && y < height && x >= 0 && x < width) {
-                colormap[y][x] = color;
-            }
-        }
-        Canvas(long long w, long long h, qboost::misc::rgb color)
-        {
-            width = w;
-            height = h;
-            background_color = color;
-            colormap.resize(height, std::vector<qboost::misc::rgb>(width, color));
-        }
-        //**
-        // Renders the canvas (optimized possibl) at the cursor position (in screen).
-        // ! For best possible results without glitches please enable CanvasMode(true).
-        //  */
-        void RenderAt(long long cx, long long cy) {
-            std::string output;
-            output.reserve(width * height * 2 + height * 64);
 
-            output += QBoostANSI::MoveCursor(cx, cy);
-            output += QBoostANSI::CursorVisibility(false);
+    Canvas(long long w, long long h, qboost::misc::rgb color) {
+        width = w;
+        height = h;
+        background_color = color;
+        colormap.resize(height, std::vector<qboost::misc::rgb>(width, color));
+    }
 
-            static std::string spaces(3000, ' ');
+    void clearCanvas() {
+        for (auto& row : colormap)
+            std::fill(row.begin(), row.end(), CanvasTransparent);
+    }
 
-            for (long long y = 0; y < height; y++) {
-                misc::rgb last_color = {-1, -1, -1};
-                long long x = 0;
+    void fillCanvas(misc::rgb clr) {
+        for (auto& row : colormap)
+            std::fill(row.begin(), row.end(), clr);
+    }
 
-                while (x < width) {
-                    misc::rgb cc = colormap[y][x];
-                    long long run = 1;
-                    while (x + run < width && colormap[y][x + run] == cc) run++;
+    // Renders the canvas at the given cursor position
+    // For best results, enable CanvasMode(true) before rendering
+    void RenderAt(long long cx, long long cy) {
+        std::string output;
+        output.reserve(width * height * 3);
 
-                    if (cc == CanvasTransparent) {
-                        output += QBoostANSI::Reset;
-                        long long remaining = run;
-                        while (remaining > 0) {
-                            long long _v_chunk = std::min((long long)(spaces.size() / 2), remaining);
-                            output.append(spaces.c_str(), _v_chunk * 2);
-                            remaining -= _v_chunk;
-                        }
-                        last_color = {-1, -1, -1};
+        output += QBoostANSI::MoveCursor(cx, cy);
+        output += QBoostANSI::CursorVisibility(false);
+
+        static std::string spaces(65535, ' ');
+
+        for (long long y = 0; y < height; y++) {
+            misc::rgb last_color = {255, 255, 255};
+
+            for (long long x = 0; x < width;) {
+                misc::rgb cc = colormap[y][x];
+                long long run_start = x;
+
+                while (x + 1 < width && colormap[y][x + 1] == cc)
+                    x++;
+
+                long long run_length = x - run_start + 1;
+
+                if (!(cc == last_color)) {
+                    if (!(cc == CanvasTransparent))
+                    {
+                        output += QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b);
+                        last_color = cc;
                     } else {
-                        if (!(cc == last_color)) {
-                            output += QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b);
-                            last_color = cc;
-                        }
-                        long long remaining = run;
-                        while (remaining > 0) {
-                            long long _v_chunk = std::min((long long)(spaces.size() / 2), remaining);
-                            output.append(spaces.c_str(), _v_chunk * 2);
-                            remaining -= _v_chunk;
-                        }
+                        last_color = CanvasTransparent;
                     }
-
-                    x += run;
                 }
 
-                output += QBoostANSI::Reset;
-                output += QBoostANSI::ClearToEndOfLine;
-                output += QBoostConsole::LineBreak;
-            }
+                while (run_length > 0) {
+                    long long chunk = std::min((long long)(spaces.size() / 2), run_length);
+                    output.append(spaces, 0, chunk * 2);
+                    run_length -= chunk;
+                }
 
+                x++;
+            }
 
             output += QBoostANSI::Reset;
             output += QBoostANSI::ClearToEndOfLine;
-            output += QBoostANSI::CursorVisibility(true);
-            QBoostConsole::Output(output);
+            output += QBoostConsole::LineBreak;
         }
 
-    };
-
-    inline void clearCanvasAt(Canvas& colormap, int cursorx, int cursory)
-    {
-        std::stringstream ss;
-        ss << QBoostANSI::CursorVisibility(false) << QBoostANSI::MoveCursor(1, 1);
-        for (int i = 0; i < (long long)colormap.colormap.size(); i++)
-        {
-            for (int j = 0; j < (long long)colormap.colormap[i].size(); j++)
-            {
-                ss << "  ";
-            }
-            ss << QBoostConsole::LineBreak;
-        }
-
-        QBoostConsole::Output(ss.str(), QBoostANSI::CursorVisibility(true));
+        output += QBoostANSI::Reset;
+        output += QBoostANSI::ClearToEndOfLine;
+        output += QBoostANSI::CursorVisibility(true);
+        QBoostConsole::Output(output);
     }
-    inline void clearEveryCanvas(Canvas& colormap, int cursorx, int cursory)
-    {
-        QBoostConsole::Output(QBoostANSI::ClearScreen());
-    }
-}
+};
+
+} // namespace qboost
