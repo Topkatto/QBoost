@@ -2,8 +2,9 @@
 
 #include "ConsoleExtended.hpp"
 #include "Structs.hpp"
-#include <bits/stdc++.h>
-
+#include <string>
+#include <vector>
+#include <algorithm>
 
 namespace qboost
 {
@@ -37,7 +38,7 @@ namespace qboost
         {
             for (long long i = 0; i < height; i++)
             {
-                std::fill((*this).colormap[i].begin(), (*this).colormap[i].end(), CanvasTransparent);
+                std::fill(colormap[i].begin(), colormap[i].end(), CanvasTransparent);
             }
         }
 
@@ -45,112 +46,99 @@ namespace qboost
         {
             for (long long i = 0; i < height; i++)
             {
-                std::fill((*this).colormap[i].begin(), (*this).colormap[i].end(), t);
+                std::fill(colormap[i].begin(), colormap[i].end(), t);
             }
         }
-        
+
+    private:
+        void genrenderstr(std::string& outbuf)
+        {
+            outbuf.reserve(height * (width * 7 + 10));
+
+            static const std::string spaces(2048, ' ');
+
+            for (long long y = 0; y < height; ++y)
+            {
+                const auto& row = colormap[y];
+                misc::rgb lcr = {-2, -2, -2};
+                long long x = 0;
+
+                while (x < width)
+                {
+                    misc::rgb cc = row[x];
+
+                    if (cc.r == -1 && cc.g == -1 && cc.b == -1) {
+                        if (!(lcr.r == -2 && lcr.g == -2 && lcr.b == -2)) {
+                            outbuf.append(QBoostANSI::Reset);
+                            lcr = {-2, -2, -2};
+                        }
+                        outbuf.append("  ");
+                        x++;
+                        continue;
+                    }
+
+                    long long run = 1;
+                    while (x + run < width && row[x + run] == cc) {
+                        run++;
+                    }
+
+                    if (!(cc == lcr)) {
+                        outbuf.append(QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b));
+                        lcr = cc;
+                    }
+
+                    long long remns = run * 2;
+                    while (remns > 0) {
+                        long long chunk = std::min((long long)spaces.size(), remns);
+                        outbuf.append(spaces.data(), chunk);
+                        remns -= chunk;
+                    }
+                    
+                    x += run;
+                }
+                outbuf.append(QBoostANSI::Reset);
+                outbuf.append(QBoostConsole::LineBreak);
+            }
+        }
+
+    public:
         /**
-        * Renders the canvas at (cx,cy).
-        * Best for animations.
+        * Renders the canvas at (cx,cy). Best for animations.
         */
         void RenderAt(long long cx, long long cy)
         {
-            std::ostringstream output;
-            output << QBoostANSI::MoveCursor(cx, cy) << QBoostANSI::CursorVisibility(false) << QBoostANSI::DisableLineWrap;
+            std::string outbuf;
+            
+            outbuf.append(QBoostANSI::MoveCursor(cx, cy));
+            outbuf.append(QBoostANSI::CursorVisibility(false));
+            outbuf.append(QBoostANSI::DisableLineWrap);
 
-            static std::string spaces(3000, ' ');
+            genrenderstr(outbuf);
 
-            for (long long y = 0; y < height; ++y)
-            {
-                std::ostringstream rowbuf;
-                misc::rgb last_color = {-2, -2, -2};
-                long long x = 0;
-                while (x < width)
-                {
-                    misc::rgb cc = colormap[y][x];
-                    if (cc.r == -1 && cc.g == -1 && cc.b == -1) {
-                        if (!(last_color.r == -2 && last_color.g == -2 && last_color.b == -2)) {
-                            rowbuf << QBoostANSI::Reset;
-                            last_color = {-2, -2, -2};
-                        }
-                        rowbuf << "  ";
-                        x++;
-                        continue;
-                    }
-                    long long run = 1;
-                    while (x + run < width && colormap[y][x + run] == cc && !(colormap[y][x + run].r == -1 && colormap[y][x + run].g == -1 && colormap[y][x + run].b == -1)) {
-                        run++;
-                    }
-                    if (!(cc == last_color)) {
-                        rowbuf << QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b);
-                        last_color = cc;
-                    }
-                    long long remaining = run;
-                    while (remaining > 0) {
-                        long long chunk = std::min((long long)(spaces.size() / 2), remaining);
-                        rowbuf.write(spaces.c_str(), chunk * 2);
-                        remaining -= chunk;
-                    }
-                    x += run;
-                }
-                rowbuf << QBoostANSI::Reset;
-                output << rowbuf.str() << QBoostConsole::LineBreak;
-            }
-
-            output << QBoostANSI::Reset;
-            output << QBoostANSI::CursorVisibility(true) << QBoostANSI::EnableLineWrap;
-            QBoostConsole::Output(output.str());
-        }   
+            outbuf.append(QBoostANSI::Reset);
+            outbuf.append(QBoostANSI::CursorVisibility(true));
+            outbuf.append(QBoostANSI::EnableLineWrap);
+            
+            QBoostConsole::Output(outbuf);
+        }
 
         /**
-        * Renders the canvas directly into the main buffer without positioning.
-        * This is a simpler version of RenderAt.
+        * Renders the canvas directly into the main buffer.
         */
         void Render()
         {
-            std::ostringstream output;
-            output << QBoostANSI::CursorVisibility(false);
-            output << QBoostANSI::DisableLineWrap;
-            static std::string spaces(3000, ' ');
-            for (long long y = 0; y < height; ++y)
-            {
-                std::ostringstream rowbuf;
-                misc::rgb last_color = {-2, -2, -2};
-                long long x = 0;
-                while (x < width)
-                {
-                    misc::rgb cc = colormap[y][x];
-                    if (cc.r == -1 && cc.g == -1 && cc.b == -1) {
-                        if (!(last_color.r == -2 && last_color.g == -2 && last_color.b == -2)) {
-                            rowbuf << QBoostANSI::Reset;
-                            last_color = {-2, -2, -2};
-                        }
-                        rowbuf << "  ";
-                        x++;
-                        continue;
-                    }
-                    long long run = 1;
-                    while (x + run < width && colormap[y][x + run] == cc && !(colormap[y][x + run].r == -1 && colormap[y][x + run].g == -1 && colormap[y][x + run].b == -1)) {
-                        run++;
-                    }
-                    if (!(cc == last_color)) {
-                        rowbuf << QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b);
-                        last_color = cc;
-                    }
-                    long long remaining = run;
-                    while (remaining > 0) {
-                        long long chunk = std::min((long long)(spaces.size() / 2), remaining);
-                        rowbuf.write(spaces.c_str(), chunk * 2);
-                        remaining -= chunk;
-                    }
-                    x += run;
-                }
-                rowbuf << QBoostANSI::Reset;
-                output << rowbuf.str() << QBoostConsole::LineBreak;
-            }
-            output << QBoostANSI::Reset;
-            output << QBoostANSI::CursorVisibility(true) << QBoostANSI::EnableLineWrap;
-            QBoostConsole::Output(output.str());
-        }    
+            std::string outbuf;
+
+            outbuf.append(QBoostANSI::CursorVisibility(false));
+            outbuf.append(QBoostANSI::DisableLineWrap);
+
+            genrenderstr(outbuf);
+
+            outbuf.append(QBoostANSI::Reset);
+            outbuf.append(QBoostANSI::CursorVisibility(true));
+            outbuf.append(QBoostANSI::EnableLineWrap);
+            
+            QBoostConsole::Output(outbuf);
+        }
     };
 }
