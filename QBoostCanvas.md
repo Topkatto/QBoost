@@ -189,16 +189,40 @@ As you can see this make the rainbow traingle in the OpenGL examples.
 
 ## 3. Canvas information
 `Canvas.width` The canvas width.
+
+
 `Canvas.height` The canvas height.
+
+
 `Canvas.colormap` The canvas's pixel color data (`Canvas.colormap[y_coord][x_coord]`)
+
+
 `Canvas(long long w, long long h, qboost::misc::rgb cr)` The default constructor for canvas. It will create an canvas with `width=w,height=h,background/color=cr`
+
+
 `Canvas.drawPixel(long long x, long long y, qboost::misc::rgb colr)` Draws an pixel into the Canvas at `(x,y)` with `color=colr`.
+
+
 `Canvas.fillCanvas(qboost::misc::rgb t)` Fills the canvas with an solid color `t`.
+
+
 `Canvas.RenderAt(long long cx, long long cy)` Renders the canvas at `(cx,cy)`. it is primarily used for animated canvas.
+
+
 `Canvas.Render()` Renders the canvas at the current cursor position.
+
+
 ## 4. Other information
+
+
 `qboost::CanvasTransparent` Transparent color for canvas.
+
+
 `qboost::CanvasMode(bool a)` Enters the alternate buffer session/Canvas session, mainly used for animating, as this disables scrolling. To exit simply set `a=false`.
+
+
 `qboost::TerminalResize()` Returns an bool for which checks if the terminal is resized or not. This is the most improtant at animated canvases as it allows you to fix bugs like color bleed.
+
+
 `qboost::ResetScreen()` Clears the screen.
 
