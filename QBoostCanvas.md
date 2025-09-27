@@ -76,4 +76,6 @@ int main()
 }
 ```
 <img width="560" height="541" alt="image" src="https://github.com/user-attachments/assets/c496bf0e-46c7-42d3-87f5-7800df009900" />
+
+
 This is what you get with drawing pixels. you can also erase pixels by replacing `color` with `CanvasTransparent`.
