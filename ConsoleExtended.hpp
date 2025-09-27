@@ -4,6 +4,13 @@
 #include <iostream>
 #include <winnls.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 namespace QBoostConsole
 {
     const char LineBreak = '\n';
@@ -135,4 +142,50 @@ namespace QBoostANSI
     inline std::string MoveToColumn(int col) { return "\033[" + std::to_string(col) + "G"; }
     inline std::string ScrollUp(int n = 1)   { return "\033[" + std::to_string(n) + "S"; }
     inline std::string ScrollDown(int n = 1) { return "\033[" + std::to_string(n) + "T"; }
+}
+
+namespace qboost
+{
+    inline void ResetScreen()
+    {
+        QBoostConsole::Output(QBoostANSI::ClearScreen());
+    }
+    struct TerminalSize {
+        int width, height;
+        bool operator!=(const TerminalSize& other) const {
+            return width != other.width || height != other.height;
+        }
+    };
+
+    inline TerminalSize get_terminal_dimensions() {
+    #ifdef _WIN32
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+        int width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        int height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        return {width, height};
+    #else
+        struct winsize size;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+        return {size.ws_col, size.ws_row};
+    #endif
+    }
+
+    inline bool TerminalResize()
+    {
+        static TerminalSize last_known_size = {-1, -1};
+        TerminalSize current_size = get_terminal_dimensions();
+
+        if (last_known_size.width == -1) {
+            last_known_size = current_size;
+            return false;
+        }
+
+        if (current_size != last_known_size) {
+            last_known_size = current_size;
+            return true;
+        }
+
+        return false;
+    }
 }
