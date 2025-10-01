@@ -98,6 +98,7 @@ namespace qboost
                     x += run;
                 }
                 outbuf.append(QBoostANSI::Reset);
+                outbuf.append(QBoostANSI::ClearToEndOfLine);
                 outbuf.append(&QBoostConsole::LineBreak);
             }
         }
@@ -112,13 +113,11 @@ namespace qboost
             
             outbuf.append(QBoostANSI::MoveCursor(cx, cy));
             outbuf.append(QBoostANSI::CursorVisibility(false));
-            outbuf.append(QBoostANSI::DisableLineWrap);
 
             genrenderstr(outbuf);
 
             outbuf.append(QBoostANSI::Reset);
             outbuf.append(QBoostANSI::CursorVisibility(true));
-            outbuf.append(QBoostANSI::EnableLineWrap);
             
             QBoostConsole::Output(outbuf);
         }
@@ -131,13 +130,11 @@ namespace qboost
             std::string outbuf;
 
             outbuf.append(QBoostANSI::CursorVisibility(false));
-            outbuf.append(QBoostANSI::DisableLineWrap);
 
             genrenderstr(outbuf);
 
             outbuf.append(QBoostANSI::Reset);
             outbuf.append(QBoostANSI::CursorVisibility(true));
-            outbuf.append(QBoostANSI::EnableLineWrap);
             
             QBoostConsole::Output(outbuf);
         }
