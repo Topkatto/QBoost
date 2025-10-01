@@ -8,6 +8,11 @@
 
 namespace qboost
 {
+    // Enables UTF-8 encoding.
+    inline void CanvasSetup()
+    {
+        QBoostConsole::SetConsoleEncodingUTF8();
+    }
     inline void CanvasMode(bool a)
     {
         QBoostConsole::Output(a ? QBoostANSI::UseAltBuffer : QBoostANSI::UseMainBuffer);
@@ -54,8 +59,7 @@ namespace qboost
         void genrenderstr(std::string& outbuf)
         {
             outbuf.reserve(height * (width * 7 + 10));
-
-            static const std::string spaces(2048, ' ');
+            const std::string chr = "⠀";
 
             for (long long y = 0; y < height; ++y)
             {
@@ -86,12 +90,9 @@ namespace qboost
                         outbuf.append(QBoostANSI::SetBackgroundColorRGB(cc.r, cc.g, cc.b));
                         lcr = cc;
                     }
-
-                    long long remns = run * 2;
-                    while (remns > 0) {
-                        long long chunk = std::min((long long)spaces.size(), remns);
-                        outbuf.append(spaces.data(), chunk);
-                        remns -= chunk;
+                    for (int i = 0; i < run * 2; ++i)
+                    {
+                        outbuf.append(chr);
                     }
                     
                     x += run;
