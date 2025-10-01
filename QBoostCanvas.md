@@ -14,6 +14,7 @@ To render canvas, we need to make an canvas first.
 
 int main()
 {
+    qboost::CanvasSetup(); // Very nesscary. Set-up the canvas system by allowing terminal to use UTF-8.
     qboost::Canvas p(35,35,{0,150,0}); // Dark green filled canvas
     p.Render(); // Renders the canvas in the current cursor position
 }
@@ -36,6 +37,7 @@ To draw pixels, we use `exampleCanva.drawPixel(x_coord, y_coord, color)`.
 
 int main()
 {
+    qboost::CanvasSetup(); // Very nesscary. Set-up the canvas system by allowing terminal to use UTF-8.
     // defining canvas dimensions
     const int width = 30;
     const int height = 30;
@@ -111,6 +113,7 @@ auto barycentric(const Vertex& p1, const Vertex& p2, const Vertex& p3, int px, i
 }
 
 int main() {
+    qboost::CanvasSetup(); // Very nesscary. Set-up the canvas system by allowing terminal to use UTF-8.
     const int width = 300, height = 300; // canvas width & height
     
     qboost::Canvas canvas(width, height, {0, 0, 0}); // making canvas
