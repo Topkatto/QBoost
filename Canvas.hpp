@@ -97,7 +97,7 @@ namespace qboost
                     x += run;
                 }
                 outbuf.append(QBoostANSI::Reset);
-                outbuf.append(QBoostConsole::LineBreak);
+                outbuf.append(&QBoostConsole::LineBreak);
             }
         }
 
