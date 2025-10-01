@@ -3,8 +3,7 @@
 QBoost is an open-source library to make different things, some as shortcuts.
 Canvas is an rendering engine for terminal, so if you hate graphics progamming, this may be for you.
 ## How to use Canvas
-To use canvas, you must install the whole **QBoost library along with Boost (not required if you only include Canvas).
-**
+To use canvas, you must install the whole **QBoost library along with Boost (not required if you only include Canvas).**
 
 ## Tutorial
 ### 1. Rendering for non-animated canvas
